@@ -582,12 +582,25 @@ export const QueueScreen: React.FC<QueueScreenProps> = ({
                   key={clip.id}
                   className="relative aspect-[9/16] rounded-2xl overflow-hidden bg-[#36343a] shadow-md group"
                 >
-                  <img
-                    src={clip.thumbnailUrl}
-                    alt={clip.title}
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
+                  {clip.videoUrl ? (
+                    <video
+                      src={clip.videoUrl}
+                      poster={clip.thumbnailUrl}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      crossOrigin="anonymous"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  ) : (
+                    <img
+                      src={clip.thumbnailUrl}
+                      alt={clip.title}
+                      referrerPolicy="no-referrer"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-[#0f0d13]/95 via-transparent to-[#0f0d13]/40 flex flex-col justify-between p-2.5">
                     <div className="flex items-center justify-between">
                       <span className="px-1.5 py-0.5 rounded-md bg-[#0f0d13]/80 text-[10px] font-mono-code text-[#e7e0e9] font-bold">

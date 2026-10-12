@@ -4,7 +4,9 @@ import {
   AppSettingsJSON,
   BRollClipItem,
   INITIAL_STOCK_CLIPS,
+  MotionVideoPreset,
   QueuedShortItem,
+  VIRAL_MOTION_VIDEOS,
   VideoScriptRecipeJSON,
   buildCaptionsFromText,
 } from '../types/schemas';
@@ -176,10 +178,19 @@ export const FacelessReelsStudio: React.FC<FacelessReelsStudioProps> = ({
   const [isExportingWebm, setIsExportingWebm] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
 
+  // Video picker & custom video upload states
+  const [selectedClipForVideoPicker, setSelectedClipForVideoPicker] = useState<number | null>(null);
+  const [customVideoUrlInput, setCustomVideoUrlInput] = useState('');
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [activeClipIndexForUpload, setActiveClipIndexForUpload] = useState<number>(0);
+
   const audioPlayerRef = useRef<HTMLAudioElement | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const oscRef = useRef<OscillatorNode | null>(null);
   const exportCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const mainVideoRef = useRef<HTMLVideoElement | null>(null);
+  const splitTopVideoRef = useRef<HTMLVideoElement | null>(null);
+  const splitBottomVideoRef = useRef<HTMLVideoElement | null>(null);
 
   const totalDurationMs =
     activeShort.recipe.captionsTimeline.length > 0
@@ -443,6 +454,7 @@ export const FacelessReelsStudio: React.FC<FacelessReelsStudioProps> = ({
             .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
             .join(' '),
           thumbnailUrl: poolPick.thumbnailUrl,
+          videoUrl: poolPick.videoUrl || c.videoUrl,
         };
       });
 
@@ -522,6 +534,7 @@ export const FacelessReelsStudio: React.FC<FacelessReelsStudioProps> = ({
     updatedClips[clipIndex] = {
       ...updatedClips[clipIndex],
       thumbnailUrl: nextVisual.thumbnailUrl,
+      videoUrl: nextVisual.videoUrl || '',
       title: nextVisual.title,
     };
     onUpdateShort({
@@ -531,6 +544,38 @@ export const FacelessReelsStudio: React.FC<FacelessReelsStudioProps> = ({
         clipIndex === 0 ? nextVisual.thumbnailUrl : activeShort.thumbnailUrl,
     });
     setGeneratingClipIndex(null);
+  };
+
+  const handleSelectVideoForClip = (
+    clipIndex: number,
+    videoUrl: string,
+    title?: string,
+    thumb?: string
+  ) => {
+    const updatedClips = [...activeShort.clips];
+    updatedClips[clipIndex] = {
+      ...updatedClips[clipIndex],
+      videoUrl,
+      title: title || updatedClips[clipIndex].title,
+      thumbnailUrl: thumb || updatedClips[clipIndex].thumbnailUrl,
+    };
+    onUpdateShort({
+      ...activeShort,
+      clips: updatedClips,
+      thumbnailUrl: clipIndex === 0 && thumb ? thumb : activeShort.thumbnailUrl,
+    });
+    setSelectedClipForVideoPicker(null);
+  };
+
+  const handleCustomFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const blobUrl = URL.createObjectURL(file);
+    handleSelectVideoForClip(
+      activeClipIndexForUpload,
+      blobUrl,
+      file.name.replace(/\.[^/.]+$/, '').slice(0, 24)
+    );
   };
 
   const handleDownloadRealRenderedVideo = async () => {
@@ -544,15 +589,47 @@ export const FacelessReelsStudio: React.FC<FacelessReelsStudioProps> = ({
       const ctx = canvas.getContext('2d');
       if (!ctx) throw new Error('2D context unavailable');
 
-      const loadedImages = await Promise.all(
+      // Pre-load all media elements (Video elements for clips with videoUrl, fallback Image)
+      const loadedMedia = await Promise.all(
         activeShort.clips.map(
           (clip) =>
-            new Promise<HTMLImageElement>((resolve) => {
-              const img = new Image();
-              img.crossOrigin = 'anonymous';
-              img.onload = () => resolve(img);
-              img.onerror = () => resolve(img);
-              img.src = clip.thumbnailUrl;
+            new Promise<HTMLVideoElement | HTMLImageElement>((resolve) => {
+              if (clip.videoUrl) {
+                const vid = document.createElement('video');
+                vid.crossOrigin = 'anonymous';
+                vid.src = clip.videoUrl;
+                vid.muted = true;
+                vid.loop = true;
+                vid.playsInline = true;
+                vid.autoplay = true;
+                vid.onloadeddata = () => {
+                  vid.play().catch(() => {});
+                  resolve(vid);
+                };
+                vid.onerror = () => {
+                  const img = new Image();
+                  img.crossOrigin = 'anonymous';
+                  img.onload = () => resolve(img);
+                  img.onerror = () => resolve(img);
+                  img.src = clip.thumbnailUrl;
+                };
+                setTimeout(() => {
+                  if (vid.readyState >= 2) resolve(vid);
+                  else {
+                    const img = new Image();
+                    img.crossOrigin = 'anonymous';
+                    img.onload = () => resolve(img);
+                    img.onerror = () => resolve(img);
+                    img.src = clip.thumbnailUrl;
+                  }
+                }, 2000);
+              } else {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = () => resolve(img);
+                img.onerror = () => resolve(img);
+                img.src = clip.thumbnailUrl;
+              }
             })
         )
       );
@@ -563,7 +640,7 @@ export const FacelessReelsStudio: React.FC<FacelessReelsStudioProps> = ({
         : 'video/webm';
       const recorder = new MediaRecorder(stream, {
         mimeType,
-        videoBitsPerSecond: 4_500_000,
+        videoBitsPerSecond: 5_000_000,
       });
 
       const chunks: BlobPart[] = [];
@@ -586,27 +663,33 @@ export const FacelessReelsStudio: React.FC<FacelessReelsStudioProps> = ({
           );
 
           const cIdx = progress < 0.33 ? 0 : progress < 0.66 ? 1 : 2;
-          const img = loadedImages[cIdx] || loadedImages[0];
+          const media = loadedMedia[cIdx] || loadedMedia[0];
 
           ctx.fillStyle = '#0f0d13';
           ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-          if (img && img.complete && img.naturalWidth > 0) {
-            const zoom = 1.02 + (progress % 0.33) * 0.25;
-            const w = canvas.width * zoom;
-            const h = canvas.height * zoom;
-            const x = (canvas.width - w) / 2;
-            const y = (canvas.height - h) / 2;
-            ctx.drawImage(img, x, y, w, h);
+          if (videoFormat === 'splitscreen') {
+            const topMedia = loadedMedia[0];
+            const botMedia = loadedMedia[1] || loadedMedia[0];
+            if (topMedia) {
+              ctx.drawImage(topMedia as any, 0, 0, canvas.width, canvas.height / 2);
+            }
+            if (botMedia) {
+              ctx.drawImage(botMedia as any, 0, canvas.height / 2, canvas.width, canvas.height / 2);
+            }
+          } else if (media) {
+            ctx.drawImage(media as any, 0, 0, canvas.width, canvas.height);
           }
 
+          // Dark cinematic gradient overlay for readability
           const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-          grad.addColorStop(0, 'rgba(15,13,19,0.55)');
-          grad.addColorStop(0.5, 'rgba(15,13,19,0.25)');
+          grad.addColorStop(0, 'rgba(15,13,19,0.50)');
+          grad.addColorStop(0.5, 'rgba(15,13,19,0.20)');
           grad.addColorStop(1, 'rgba(15,13,19,0.85)');
           ctx.fillStyle = grad;
           ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+          // Subtitles rendering on top of motion video
           const wordEntry =
             activeShort.recipe.captionsTimeline.find(
               (w) => currentSimMs >= w.startTimeMs && currentSimMs <= w.endTimeMs + 100
@@ -621,13 +704,18 @@ export const FacelessReelsStudio: React.FC<FacelessReelsStudioProps> = ({
           const activeWord = (wordEntry?.word || 'FOCUS').toUpperCase();
 
           ctx.save();
-          ctx.font = '900 68px "Roboto Flex", sans-serif';
+          ctx.font = '900 70px "Roboto Flex", sans-serif';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.lineWidth = 12;
+          ctx.lineWidth = 14;
           ctx.strokeStyle = '#000000';
           ctx.strokeText(activeWord, canvas.width / 2, canvas.height / 2);
-          ctx.fillStyle = captionStyle === 'hormozi' ? '#FFD60A' : '#FFFFFF';
+          ctx.fillStyle =
+            captionStyle === 'hormozi'
+              ? '#FFD60A'
+              : captionStyle === 'neon'
+              ? '#cdbdff'
+              : '#FFFFFF';
           ctx.fillText(activeWord, canvas.width / 2, canvas.height / 2);
           ctx.restore();
 
@@ -647,7 +735,7 @@ export const FacelessReelsStudio: React.FC<FacelessReelsStudioProps> = ({
           a.href = url;
           a.download = `${activeShort.title
             .toLowerCase()
-            .replace(/[^a-z0-9]+/g, '_')}_9x16_short.webm`;
+            .replace(/[^a-z0-9]+/g, '_')}_motion_reel.webm`;
           a.click();
           URL.revokeObjectURL(url);
           resolve();
@@ -782,29 +870,79 @@ export const FacelessReelsStudio: React.FC<FacelessReelsStudioProps> = ({
               onClick={togglePlayReel}
               className="relative aspect-[9/16] w-full rounded-2xl overflow-hidden bg-[#0f0d13] cursor-pointer select-none group"
             >
+              {/* Motion Video Layer */}
               {videoFormat === 'splitscreen' ? (
                 <div className="w-full h-full flex flex-col">
                   <div className="relative w-full h-1/2 overflow-hidden border-b-2 border-[#7c4dff]">
-                    <img
-                      src={currentClip?.thumbnailUrl || activeShort.thumbnailUrl}
-                      alt={currentClip?.title}
-                      referrerPolicy="no-referrer"
-                      className={`w-full h-full object-cover transition-transform duration-1000 ${
-                        isPlaying ? 'scale-110' : 'scale-100'
-                      }`}
-                    />
+                    {currentClip?.videoUrl ? (
+                      <video
+                        key={`top-${currentClip.videoUrl}`}
+                        ref={splitTopVideoRef}
+                        src={currentClip.videoUrl}
+                        poster={currentClip.thumbnailUrl}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        crossOrigin="anonymous"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <img
+                        src={currentClip?.thumbnailUrl || activeShort.thumbnailUrl}
+                        alt={currentClip?.title}
+                        referrerPolicy="no-referrer"
+                        className={`w-full h-full object-cover transition-transform duration-1000 ${
+                          isPlaying ? 'scale-110' : 'scale-100'
+                        }`}
+                      />
+                    )}
+                    <span className="absolute top-2 left-2 px-1.5 py-0.5 rounded text-[9px] font-bold bg-black/70 text-white uppercase tracking-wider backdrop-blur-sm z-10">
+                      Story Scene
+                    </span>
                   </div>
                   <div className="relative w-full h-1/2 overflow-hidden">
-                    <img
-                      src={secondarySplitClip?.thumbnailUrl || activeShort.thumbnailUrl}
-                      alt="Kinetic Visual"
-                      referrerPolicy="no-referrer"
-                      className={`w-full h-full object-cover transition-transform duration-700 ${
-                        isPlaying ? 'scale-125' : 'scale-105'
-                      }`}
-                    />
+                    {secondarySplitClip?.videoUrl ? (
+                      <video
+                        key={`bot-${secondarySplitClip.videoUrl}`}
+                        ref={splitBottomVideoRef}
+                        src={secondarySplitClip.videoUrl}
+                        poster={secondarySplitClip.thumbnailUrl}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        crossOrigin="anonymous"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <img
+                        src={secondarySplitClip?.thumbnailUrl || activeShort.thumbnailUrl}
+                        alt="Kinetic Visual"
+                        referrerPolicy="no-referrer"
+                        className={`w-full h-full object-cover transition-transform duration-700 ${
+                          isPlaying ? 'scale-125' : 'scale-105'
+                        }`}
+                      />
+                    )}
+                    <span className="absolute top-2 left-2 px-1.5 py-0.5 rounded text-[9px] font-bold bg-black/70 text-[#10b981] uppercase tracking-wider backdrop-blur-sm z-10">
+                      Kinetic ASMR
+                    </span>
                   </div>
                 </div>
+              ) : currentClip?.videoUrl ? (
+                <video
+                  key={`main-${currentClip.videoUrl}`}
+                  ref={mainVideoRef}
+                  src={currentClip.videoUrl}
+                  poster={currentClip.thumbnailUrl}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  crossOrigin="anonymous"
+                  className="w-full h-full object-cover"
+                />
               ) : (
                 <img
                   src={currentClip?.thumbnailUrl || activeShort.thumbnailUrl}
@@ -815,6 +953,12 @@ export const FacelessReelsStudio: React.FC<FacelessReelsStudioProps> = ({
                   }`}
                 />
               )}
+
+              {/* Real Motion Video Badge */}
+              <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md border border-white/10 text-[10px] font-semibold text-white">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] animate-pulse" />
+                <span>MOTION VIDEO • {activeClipIndex + 1}/3</span>
+              </div>
 
               <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/45" />
 
@@ -1003,7 +1147,7 @@ export const FacelessReelsStudio: React.FC<FacelessReelsStudioProps> = ({
                   [
                     ['script', '1. Script & Voice'],
                     ['style', '2. Captions & Music'],
-                    ['scenes', '3. Visual Scenes'],
+                    ['scenes', '3. Motion Videos'],
                   ] as const
                 ).map(([key, label]) => (
                   <button
@@ -1165,49 +1309,131 @@ export const FacelessReelsStudio: React.FC<FacelessReelsStudioProps> = ({
               </div>
             )}
 
-            {/* TAB 3: VISUAL SCENES */}
+            {/* TAB 3: MOTION VIDEO CLIPS */}
             {editorSection === 'scenes' && (
-              <div className="flex flex-col gap-3">
-                <span className="text-xs text-[#cac3d8]">
-                  Click any scene below to generate a fresh 9:16 visual frame:
-                </span>
-                <div className="grid grid-cols-3 gap-3">
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex flex-col">
+                    <span className="text-xs font-semibold text-[#e7e0e9] flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-[16px] text-[#cdbdff]">
+                        movie
+                      </span>
+                      Motion Video Clips ({activeShort.clips.length} Scenes)
+                    </span>
+                    <span className="text-[11px] text-[#948ea1]">
+                      Real 9:16 vertical video footage with dynamic camera motion
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveClipIndexForUpload(0);
+                      fileInputRef.current?.click();
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-[#2b292f] hover:bg-[#36343a] text-xs font-semibold text-[#cdbdff] flex items-center gap-1.5 transition-colors cursor-pointer border border-white/5"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">upload_file</span>
+                    <span>Upload Custom Video</span>
+                  </button>
+                </div>
+
+                {/* 3 Scenes Grid with Video Preview & Controls */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {activeShort.clips.map((clip, idx) => {
                     const isGenThis = generatingClipIndex === idx;
                     return (
                       <div
                         key={clip.id}
-                        className="relative aspect-[9/16] rounded-2xl overflow-hidden bg-[#2b292f] border border-white/10"
+                        className="relative rounded-2xl overflow-hidden bg-[#211f25] border border-white/10 flex flex-col"
                       >
-                        <img
-                          src={clip.thumbnailUrl}
-                          alt={clip.title}
-                          referrerPolicy="no-referrer"
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/30 p-2.5 flex flex-col justify-between">
-                          <span className="px-2 py-0.5 w-fit rounded bg-black/70 text-[10px] font-mono-code text-white font-bold">
-                            Scene {idx + 1}
-                          </span>
+                        {/* Video / Preview Stage */}
+                        <div className="relative aspect-[9/16] w-full bg-[#0f0d13] overflow-hidden">
+                          {clip.videoUrl ? (
+                            <video
+                              src={clip.videoUrl}
+                              poster={clip.thumbnailUrl}
+                              autoPlay
+                              loop
+                              muted
+                              playsInline
+                              crossOrigin="anonymous"
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <img
+                              src={clip.thumbnailUrl}
+                              alt={clip.title}
+                              referrerPolicy="no-referrer"
+                              className="w-full h-full object-cover"
+                            />
+                          )}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/40 pointer-events-none" />
 
-                          <div className="flex flex-col gap-1.5">
-                            <span className="text-xs font-semibold text-white truncate">
+                          {/* Top Tag */}
+                          <div className="absolute top-2 left-2 right-2 flex items-center justify-between pointer-events-none">
+                            <span className="px-2 py-0.5 rounded-full bg-black/70 backdrop-blur-sm text-[10px] font-mono-code text-white font-bold">
+                              Scene {idx + 1}
+                            </span>
+                            <span className="px-2 py-0.5 rounded-full bg-[#10b981]/80 text-[9px] font-bold text-white uppercase tracking-wider backdrop-blur-sm">
+                              Video
+                            </span>
+                          </div>
+
+                          {/* Bottom Title */}
+                          <div className="absolute bottom-2 left-2 right-2 flex flex-col gap-0.5 pointer-events-none">
+                            <span className="text-xs font-bold text-white truncate">
                               {clip.title}
                             </span>
+                            <span className="text-[10px] text-[#cdbdff]/80 font-mono-code truncate">
+                              {clip.keyword}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Action Buttons for Scene */}
+                        <div className="p-2.5 flex flex-col gap-1.5 bg-[#1d1b21] border-t border-white/5">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedClipForVideoPicker(idx)}
+                            className="w-full py-1.5 rounded-xl bg-[#7c4dff] hover:bg-[#6c3df0] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm cursor-pointer transition-all active:scale-95"
+                          >
+                            <span className="material-symbols-outlined text-[15px]">
+                              video_library
+                            </span>
+                            <span>Choose Video</span>
+                          </button>
+
+                          <div className="grid grid-cols-2 gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActiveClipIndexForUpload(idx);
+                                fileInputRef.current?.click();
+                              }}
+                              className="py-1 px-2 rounded-lg bg-[#2b292f] hover:bg-[#36343a] text-[11px] font-medium text-[#cac3d8] flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                              title="Upload custom MP4/WebM video"
+                            >
+                              <span className="material-symbols-outlined text-[14px]">
+                                upload
+                              </span>
+                              <span>Upload</span>
+                            </button>
+
                             <button
                               type="button"
                               onClick={() => handleGenerateAiSceneForClip(idx)}
                               disabled={isGenThis}
-                              className="w-full py-1.5 rounded-lg bg-[#7c4dff] hover:bg-[#7c4dff]/90 text-white text-[11px] font-semibold flex items-center justify-center gap-1 cursor-pointer"
+                              className="py-1 px-2 rounded-lg bg-[#2b292f] hover:bg-[#36343a] text-[11px] font-medium text-[#cac3d8] flex items-center justify-center gap-1 transition-colors cursor-pointer disabled:opacity-50"
+                              title="Cycle to next motion video"
                             >
                               <span
                                 className={`material-symbols-outlined text-[14px] ${
                                   isGenThis ? 'animate-spin' : ''
                                 }`}
                               >
-                                {isGenThis ? 'sync' : 'refresh'}
+                                {isGenThis ? 'sync' : 'shuffle'}
                               </span>
-                              <span>{isGenThis ? 'Updating...' : 'Swap Scene'}</span>
+                              <span>Cycle</span>
                             </button>
                           </div>
                         </div>
@@ -1242,6 +1468,123 @@ export const FacelessReelsStudio: React.FC<FacelessReelsStudioProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Hidden File Input for Custom Video Uploads */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="video/mp4,video/webm,video/quicktime,video/x-matroska"
+        className="hidden"
+        onChange={handleCustomFileUpload}
+      />
+
+      {/* Motion Video Library Picker Modal */}
+      {selectedClipForVideoPicker !== null && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fade-in"
+          onClick={() => setSelectedClipForVideoPicker(null)}
+        >
+          <div
+            className="relative w-full max-w-2xl rounded-3xl bg-[#1d1b21] border border-white/10 p-5 sm:p-6 shadow-2xl flex flex-col gap-4 text-left max-h-[90vh] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between pb-2 border-b border-white/10">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-[#7c4dff]/20 text-[#cdbdff] flex items-center justify-center">
+                  <span className="material-symbols-outlined text-[20px]">movie</span>
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-[#e7e0e9]">
+                    Select Motion Video for Scene {selectedClipForVideoPicker + 1}
+                  </h3>
+                  <p className="text-xs text-[#948ea1]">
+                    Pick from verified 9:16 vertical motion video footage or paste a custom link
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedClipForVideoPicker(null)}
+                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-[#cac3d8] flex items-center justify-center cursor-pointer transition-colors"
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+            </div>
+
+            {/* Custom URL Input Bar */}
+            <div className="flex gap-2">
+              <input
+                type="url"
+                value={customVideoUrlInput}
+                onChange={(e) => setCustomVideoUrlInput(e.target.value)}
+                placeholder="Or paste direct video URL (.mp4 or .webm)..."
+                className="flex-1 h-10 px-3.5 rounded-xl bg-[#26242a] text-xs text-white placeholder:text-[#948ea1] focus:outline-none focus:ring-2 focus:ring-[#7c4dff]"
+              />
+              <button
+                type="button"
+                disabled={!customVideoUrlInput.trim()}
+                onClick={() => {
+                  if (customVideoUrlInput.trim()) {
+                    handleSelectVideoForClip(
+                      selectedClipForVideoPicker,
+                      customVideoUrlInput.trim(),
+                      'Custom Web Video'
+                    );
+                    setCustomVideoUrlInput('');
+                  }
+                }}
+                className="h-10 px-4 rounded-xl bg-[#7c4dff] hover:bg-[#6c3df0] disabled:opacity-40 text-white text-xs font-bold flex items-center gap-1 cursor-pointer transition-all"
+              >
+                <span>Apply Link</span>
+              </button>
+            </div>
+
+            {/* Grid of Verified Motion Video Presets */}
+            <div className="flex flex-col gap-2 overflow-y-auto pr-1">
+              <span className="text-xs font-semibold text-[#cdbdff] uppercase tracking-wider">
+                Verified Royalty-Free Motion Video Loops
+              </span>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {VIRAL_MOTION_VIDEOS.map((preset) => (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() =>
+                      handleSelectVideoForClip(
+                        selectedClipForVideoPicker,
+                        preset.videoUrl,
+                        preset.title,
+                        preset.thumbnailUrl
+                      )
+                    }
+                    className="relative aspect-[9/16] rounded-2xl overflow-hidden bg-[#0f0d13] border border-white/10 hover:border-[#7c4dff] transition-all cursor-pointer group text-left"
+                  >
+                    <video
+                      src={preset.videoUrl}
+                      poster={preset.thumbnailUrl}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      crossOrigin="anonymous"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/30 p-2 flex flex-col justify-between">
+                      <span className="px-2 py-0.5 rounded-full bg-black/60 text-[9px] font-bold text-[#10b981] uppercase tracking-wider w-fit">
+                        {preset.category}
+                      </span>
+                      <span className="text-xs font-bold text-white line-clamp-2 leading-tight">
+                        {preset.title}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

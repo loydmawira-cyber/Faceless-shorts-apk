@@ -5,7 +5,7 @@ interface DashboardScreenProps {
   settings: AppSettingsJSON;
   queueItems: QueuedShortItem[];
   onToggleAutoPilot: (enabled: boolean) => void;
-  onNavigateTab: (tab: 'dashboard' | 'campaign' | 'queue' | 'render') => void;
+  onNavigateTab: (tab: 'dashboard' | 'preview' | 'settings' | 'render') => void;
   onPreviewShort: (item: QueuedShortItem) => void;
   onTriggerInstantPipeline: () => void;
   isRendering: boolean;
@@ -322,10 +322,10 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             <span className="text-[11px] text-[#cdbdff] mt-0.5">+ Run Pipeline</span>
           </button>
 
-          {/* View Media Queue */}
+          {/* View Media Preview */}
           <button
             type="button"
-            onClick={() => onNavigateTab('queue')}
+            onClick={() => onNavigateTab('preview')}
             className="relative flex flex-col items-center justify-center p-3.5 rounded-2xl bg-[#211f25] text-center transition-all duration-200 active:scale-95 hover:bg-[#2b292f] group cursor-pointer"
           >
             <span className="absolute top-2 right-2 px-1.5 py-0.5 rounded-full bg-[#7f2a0d] text-[#ff9b7c] text-[10px] font-semibold tabular-nums">
@@ -334,14 +334,14 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             <div className="w-11 h-11 rounded-full bg-[#7f2a0d]/30 text-[#ffb59e] flex items-center justify-center mb-2 group-hover:bg-[#ffb59e] group-hover:text-[#5e1700] transition-colors">
               <span className="material-symbols-outlined text-[24px]">video_library</span>
             </div>
-            <span className="text-xs text-[#e7e0e9] font-medium leading-tight">Media Queue</span>
+            <span className="text-xs text-[#e7e0e9] font-medium leading-tight">Media Preview</span>
             <span className="text-[11px] text-[#cac3d8] mt-0.5">{queueItems.length} in line</span>
           </button>
 
-          {/* Channel Settings */}
+          {/* Settings */}
           <button
             type="button"
-            onClick={() => onNavigateTab('campaign')}
+            onClick={() => onNavigateTab('settings')}
             className="flex flex-col items-center justify-center p-3.5 rounded-2xl bg-[#211f25] text-center transition-all duration-200 active:scale-95 hover:bg-[#2b292f] group cursor-pointer"
           >
             <div className="w-11 h-11 rounded-full bg-[#36343a] text-[#ffb954] flex items-center justify-center mb-2 group-hover:bg-[#ffb954] group-hover:text-[#452b00] transition-colors">

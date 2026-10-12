@@ -102,12 +102,26 @@ export const ShortPreviewModal: React.FC<ShortPreviewModalProps> = ({ shortItem,
 
         {/* 9:16 Vertical Video Frame */}
         <div className="relative aspect-[9/16] w-full bg-[#0f0d13] overflow-hidden select-none">
-          <img
-            src={activeClip?.thumbnailUrl || shortItem.thumbnailUrl}
-            alt={activeClip?.title || shortItem.title}
-            referrerPolicy="no-referrer"
-            className="w-full h-full object-cover scale-105 transition-all duration-700"
-          />
+          {activeClip?.videoUrl ? (
+            <video
+              key={activeClip.videoUrl}
+              src={activeClip.videoUrl}
+              poster={activeClip.thumbnailUrl}
+              autoPlay
+              loop
+              muted
+              playsInline
+              crossOrigin="anonymous"
+              className="w-full h-full object-cover scale-105 transition-all duration-700"
+            />
+          ) : (
+            <img
+              src={activeClip?.thumbnailUrl || shortItem.thumbnailUrl}
+              alt={activeClip?.title || shortItem.title}
+              referrerPolicy="no-referrer"
+              className="w-full h-full object-cover scale-105 transition-all duration-700"
+            />
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-[#0f0d13]/90 via-black/30 to-[#0f0d13]/60" />
 
           {/* Top Overlay Telemetry */}

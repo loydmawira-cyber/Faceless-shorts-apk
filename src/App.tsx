@@ -14,14 +14,15 @@ import {
   TerminalLogEntry,
   VideoScriptRecipeJSON,
 } from './types/schemas';
-import { FacelessReelsStudio } from './components/FacelessReelsStudio';
 import { DashboardScreen } from './components/DashboardScreen';
 import { CampaignScreen } from './components/CampaignScreen';
-import { QueueScreen } from './components/QueueScreen';
+import { MediaPreviewScreen } from './components/MediaPreviewScreen';
 import { RenderScreen } from './components/RenderScreen';
+import { QueueScreen } from './components/QueueScreen';
+import { FacelessReelsStudio } from './components/FacelessReelsStudio';
 import { ShortPreviewModal } from './components/ShortPreviewModal';
 
-type ActiveTab = 'studio' | 'dashboard' | 'campaign' | 'queue' | 'render';
+type ActiveTab = 'studio' | 'queue' | 'campaign' | 'dashboard' | 'render';
 
 const STORAGE_SETTINGS_KEY = 'faceless_shorts_app_settings_v1';
 const STORAGE_QUEUE_KEY = 'faceless_shorts_queue_items_v1';
@@ -97,6 +98,8 @@ function formatTimeNow(): string {
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('studio');
+  const [showAndroidModal, setShowAndroidModal] = useState(false);
+  const [copiedBuildCmd, setCopiedBuildCmd] = useState(false);
 
   const [settings, setSettings] = useState<AppSettingsJSON>(() => {
     try {
@@ -262,16 +265,22 @@ export default function App() {
         ALTERNATE_BROLL_POOL[queueItems.length % ALTERNATE_BROLL_POOL.length]
           .thumbnailUrl;
 
-      const customClips = INITIAL_STOCK_CLIPS.map((clip, i) => ({
-        ...clip,
-        id: `${newId}-clip-${i + 1}`,
-        keyword: recipe.bRollKeywords[i] || clip.keyword,
-        title: (recipe.bRollKeywords[i] || clip.title)
-          .split(' ')
-          .slice(0, 2)
-          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-          .join(' '),
-      }));
+      const customClips = INITIAL_STOCK_CLIPS.map((clip, i) => {
+        const poolPick =
+          ALTERNATE_BROLL_POOL[(i + queueItems.length) % ALTERNATE_BROLL_POOL.length];
+        return {
+          ...clip,
+          id: `${newId}-clip-${i + 1}`,
+          keyword: recipe.bRollKeywords[i] || clip.keyword,
+          title: (recipe.bRollKeywords[i] || clip.title)
+            .split(' ')
+            .slice(0, 2)
+            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(' '),
+          thumbnailUrl: poolPick.thumbnailUrl,
+          videoUrl: poolPick.videoUrl || clip.videoUrl,
+        };
+      });
 
       const newShort: QueuedShortItem = {
         id: newId,
@@ -491,158 +500,184 @@ export default function App() {
 
   const tabSubtitles: Record<ActiveTab, string> = {
     studio: 'Create Reel',
-    dashboard: 'Dashboard',
-    campaign: 'Auto-Pilot Settings',
     queue: 'My Videos',
-    render: 'Render & Publish',
+    campaign: 'Auto-Pilot',
+    dashboard: 'Analytics',
+    render: 'Render Pipeline',
   };
+
+  const navItems = [
+    { id: 'studio' as const, label: 'Create Reel', icon: 'auto_awesome' },
+    { id: 'queue' as const, label: 'My Videos', icon: 'video_library' },
+    { id: 'campaign' as const, label: 'Auto-Pilot', icon: 'schedule_send' },
+    { id: 'dashboard' as const, label: 'Analytics', icon: 'insights' },
+  ];
 
   return (
     <div className="min-h-screen bg-[#141218] text-[#e7e0e9] flex flex-col">
-      {/* Top App Header Bar */}
-      <header className="fixed top-0 left-0 right-0 z-40 bg-[#141218]/90 backdrop-blur-xl border-b border-white/[0.06]">
-        <div className="max-w-5xl mx-auto h-16 px-4 flex items-center justify-between gap-4">
-          {/* Zone 1: Brand Title */}
-          <div className="flex items-center gap-2.5 min-w-0">
+      {/* Top Header Bar */}
+      <header className="fixed top-0 left-0 right-0 z-40 bg-[#141218]/95 backdrop-blur-xl border-b border-white/[0.06]">
+        <div className="max-w-5xl mx-auto h-16 px-4 sm:px-6 flex items-center justify-between gap-4">
+          {/* Brand Logo & Title */}
+          <div
+            className="flex items-center gap-3 cursor-pointer select-none min-w-0"
+            onClick={() => setActiveTab('studio')}
+          >
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#7c4dff] to-[#cdbdff] flex items-center justify-center shadow-md shrink-0">
-              <span className="material-symbols-outlined text-[#20005f] text-[22px] icon-filled">
+              <span className="material-symbols-outlined text-[#20005f] text-[20px] icon-filled">
                 play_shapes
               </span>
             </div>
-            <span className="text-base font-bold text-[#e7e0e9] tracking-tight truncate">
-              FacelessReels
-            </span>
+            <div className="flex flex-col min-w-0">
+              <span className="text-base font-bold text-[#e7e0e9] tracking-tight truncate leading-tight">
+                FacelessReels
+              </span>
+              <span className="text-[10px] text-[#cdbdff]/80 font-medium leading-none mt-0.5">
+                AI Studio & Auto-Pilot
+              </span>
+            </div>
           </div>
 
-          {/* Zone 2: Clean 4-item Navigation */}
-          <nav className="hidden md:flex items-center gap-7 text-xs font-medium text-[#cac3d8]">
-            {(
-              [
-                ['studio', 'Create Reel'],
-                ['queue', 'My Videos'],
-                ['campaign', 'Auto-Pilot'],
-                ['dashboard', 'Analytics'],
-              ] as const
-            ).map(([tabKey, label]) => (
-              <button
-                key={tabKey}
-                type="button"
-                onClick={() => setActiveTab(tabKey)}
-                className={`py-1 transition-colors whitespace-nowrap cursor-pointer ${
-                  activeTab === tabKey
-                    ? 'text-[#cdbdff] font-semibold border-b-2 border-[#7c4dff]'
-                    : 'hover:text-white'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
+          {/* Desktop Navigation Tabs */}
+          <nav className="hidden md:flex items-center gap-1 bg-[#211f25] p-1 rounded-2xl border border-white/[0.06]">
+            {navItems.map((item) => {
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setActiveTab(item.id)}
+                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                    isActive
+                      ? 'bg-[#7c4dff] text-white shadow-sm'
+                      : 'text-[#cac3d8] hover:text-white hover:bg-white/[0.04]'
+                  }`}
+                >
+                  <span
+                    className={`material-symbols-outlined text-[16px] ${
+                      isActive ? 'icon-filled' : ''
+                    }`}
+                  >
+                    {item.icon}
+                  </span>
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
           </nav>
 
-          {/* Zone 3: Clean Primary Action */}
-          <div className="flex items-center gap-2 shrink-0">
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2.5 shrink-0">
             <button
               type="button"
-              onClick={() => {
-                setActiveTab('studio');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              className="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-[#7c4dff] hover:bg-[#6c3df0] text-white flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
+              onClick={() => setShowAndroidModal(true)}
+              className="px-3 py-1.5 rounded-xl border border-white/10 hover:border-[#7c4dff]/50 bg-[#211f25] hover:bg-[#2b292f] text-xs font-semibold text-[#cdbdff] flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+              title="Android APK Build & Download Guide"
             >
-              <span className="material-symbols-outlined text-[16px]">add</span>
-              <span>Create Reel</span>
+              <span className="material-symbols-outlined text-[16px]">
+                android
+              </span>
+              <span className="hidden sm:inline">Android APK</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('studio')}
+              className="px-3.5 py-1.5 rounded-xl bg-[#7c4dff] hover:bg-[#6c3df0] text-white text-xs font-semibold flex items-center gap-1.5 shadow-md transition-all cursor-pointer active:scale-95"
+            >
+              <span className="material-symbols-outlined text-[16px]">
+                add
+              </span>
+              <span>New Reel</span>
             </button>
           </div>
         </div>
       </header>
 
-      {/* Main Content Container */}
-      <main className="flex-1 w-full max-w-5xl mx-auto pt-20 pb-28 px-4">
-        {activeTab === 'studio' && activeShort ? (
+      {/* Main Content Area */}
+      <main className="flex-1 w-full max-w-5xl mx-auto pt-20 pb-28 px-4 sm:px-6">
+        {activeTab === 'studio' && activeShort && (
           <FacelessReelsStudio
             settings={settings}
             activeShort={activeShort}
             onUpdateShort={handleUpdateShortItem}
             onCreateNewShortInQueue={handleCreateNewShortInQueue}
-            onNavigateToRender={handleStartLivePipelineRun}
+            onNavigateToRender={() => setActiveTab('render')}
           />
-        ) : (
-          <div className="max-w-3xl mx-auto w-full flex flex-col">
-            {activeTab === 'dashboard' && (
-              <DashboardScreen
-                settings={settings}
-                queueItems={queueItems}
-                onToggleAutoPilot={(enabled) =>
-                  setSettings((prev) => ({ ...prev, autoPilotEnabled: enabled }))
-                }
-                onNavigateTab={(t) => setActiveTab(t)}
-                onPreviewShort={(item) => setPreviewModalShort(item)}
-                onTriggerInstantPipeline={() => setActiveTab('studio')}
-                isRendering={isRendering}
-                renderProgress={renderProgress}
-              />
-            )}
+        )}
 
-            {activeTab === 'campaign' && (
-              <CampaignScreen
-                settings={settings}
-                onUpdateSettings={setSettings}
-                onSaveAndStartAutoPilot={() => {
-                  setSettings((prev) => ({
-                    ...prev,
-                    autoPilotEnabled: true,
-                    lastRunTimestamp: Date.now(),
-                  }));
-                  setActiveTab('studio');
-                }}
-              />
-            )}
+        {activeTab === 'queue' && (
+          <QueueScreen
+            settings={settings}
+            queueItems={queueItems}
+            selectedShortId={selectedShortId}
+            onSelectShort={setSelectedShortId}
+            onUpdateShortItem={handleUpdateShortItem}
+            onPreviewShort={(item) => setPreviewModalShort(item)}
+            onApproveAndRenderShort={(item) => {
+              setSelectedShortId(item.id);
+              handleStartLivePipelineRun();
+              setActiveTab('render');
+            }}
+            onGenerateNewAiShort={handleGenerateNewAiShort}
+            isGeneratingAi={isGeneratingAi}
+          />
+        )}
 
-            {activeTab === 'queue' && (
-              <QueueScreen
-                settings={settings}
-                queueItems={queueItems}
-                selectedShortId={selectedShortId}
-                onSelectShort={setSelectedShortId}
-                onUpdateShortItem={handleUpdateShortItem}
-                onPreviewShort={(item) => setPreviewModalShort(item)}
-                onApproveAndRenderShort={(item) => {
-                  setSelectedShortId(item.id);
-                  handleStartLivePipelineRun();
-                }}
-                onGenerateNewAiShort={handleGenerateNewAiShort}
-                isGeneratingAi={isGeneratingAi}
-              />
-            )}
+        {activeTab === 'campaign' && (
+          <CampaignScreen
+            settings={settings}
+            onUpdateSettings={setSettings}
+            onSaveAndStartAutoPilot={() => {
+              setSettings((prev) => ({
+                ...prev,
+                autoPilotEnabled: true,
+                lastRunTimestamp: Date.now(),
+              }));
+              setActiveTab('queue');
+            }}
+          />
+        )}
 
-            {activeTab === 'render' && activeShort && (
-              <RenderScreen
-                activeShort={activeShort}
-                isRendering={isRendering}
-                renderProgress={renderProgress}
-                currentStageNumber={currentStageNumber}
-                pipelineSteps={pipelineSteps}
-                terminalLogs={terminalLogs}
-                onStartLivePipelineRun={handleStartLivePipelineRun}
-                onCancelRender={handleCancelRender}
-                onPreviewShort={(item) => setPreviewModalShort(item)}
-              />
-            )}
-          </div>
+        {activeTab === 'dashboard' && (
+          <DashboardScreen
+            settings={settings}
+            queueItems={queueItems}
+            onToggleAutoPilot={(enabled) =>
+              setSettings((prev) => ({ ...prev, autoPilotEnabled: enabled }))
+            }
+            onNavigateTab={(t) => {
+              if (t === 'dashboard') setActiveTab('dashboard');
+              else if (t === 'preview') setActiveTab('studio');
+              else if (t === 'settings') setActiveTab('campaign');
+              else if (t === 'render') setActiveTab('render');
+            }}
+            onPreviewShort={(item) => setPreviewModalShort(item)}
+            onTriggerInstantPipeline={handleStartLivePipelineRun}
+            isRendering={isRendering}
+            renderProgress={renderProgress}
+          />
+        )}
+
+        {activeTab === 'render' && activeShort && (
+          <RenderScreen
+            activeShort={activeShort}
+            isRendering={isRendering}
+            renderProgress={renderProgress}
+            currentStageNumber={currentStageNumber}
+            pipelineSteps={pipelineSteps}
+            terminalLogs={terminalLogs}
+            onStartLivePipelineRun={handleStartLivePipelineRun}
+            onCancelRender={handleCancelRender}
+            onPreviewShort={(item) => setPreviewModalShort(item)}
+          />
         )}
       </main>
 
-      {/* Clean 4-Tab Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-[#1d1b21]/95 backdrop-blur-xl border-t border-white/[0.06]">
+      {/* Mobile Bottom Navigation Bar */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#1d1b21]/95 backdrop-blur-xl border-t border-white/[0.06]">
         <div className="max-w-md mx-auto grid grid-cols-4 items-center h-16 px-2">
-          {(
-            [
-              { id: 'studio', label: 'Create', icon: 'auto_videocam' },
-              { id: 'queue', label: 'My Videos', icon: 'video_library' },
-              { id: 'campaign', label: 'Auto-Pilot', icon: 'tune' },
-              { id: 'dashboard', label: 'Analytics', icon: 'bar_chart' },
-            ] as const
-          ).map((item) => {
+          {navItems.map((item) => {
             const isActive = activeTab === item.id;
             return (
               <button
@@ -678,6 +713,138 @@ export default function App() {
         shortItem={previewModalShort}
         onClose={() => setPreviewModalShort(null)}
       />
+
+      {/* Android App & APK Build Modal */}
+      {showAndroidModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in"
+          onClick={() => setShowAndroidModal(false)}
+        >
+          <div
+            className="relative w-full max-w-xl rounded-3xl bg-[#1d1b21] border border-white/10 p-6 shadow-2xl overflow-hidden flex flex-col gap-5 text-left"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-[#7c4dff]/20 text-[#cdbdff] flex items-center justify-center shrink-0">
+                  <span className="material-symbols-outlined text-[24px]">
+                    android
+                  </span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-[#e7e0e9] leading-tight">
+                    Android App & APK Builder
+                  </h3>
+                  <p className="text-xs text-[#948ea1] mt-0.5">
+                    Automated APK build via GitHub Actions & native Jetpack Compose
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAndroidModal(false)}
+                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-[#cac3d8] flex items-center justify-center cursor-pointer transition-colors"
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+            </div>
+
+            {/* How to Get APK from GitHub Actions */}
+            <div className="flex flex-col gap-3 rounded-2xl bg-[#26242a] p-4 border border-white/5">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px] text-[#cdbdff]">
+                  rocket_launch
+                </span>
+                <span className="text-xs font-bold text-[#e7e0e9] uppercase tracking-wider">
+                  How to Build & Download APK from GitHub
+                </span>
+              </div>
+              <ol className="text-xs text-[#cac3d8] space-y-2.5 pl-4 list-decimal marker:text-[#cdbdff] marker:font-bold">
+                <li>
+                  <strong className="text-white">Push to GitHub:</strong> Your repository already contains{' '}
+                  <code className="text-[#cdbdff] bg-black/30 px-1 py-0.5 rounded font-mono text-[11px]">
+                    .github/workflows/build-android-apk.yml
+                  </code>.
+                </li>
+                <li>
+                  <strong className="text-white">Automatic Build:</strong> On every push or manual run in GitHub, Actions automatically compiles the Android app using JDK 17, Android SDK 35, and Gradle 8.9.
+                </li>
+                <li>
+                  <strong className="text-white">Download APK:</strong> Open your GitHub repository &rarr; click the{' '}
+                  <strong className="text-[#cdbdff]">Actions</strong> tab &rarr; select the latest build &rarr; download the{' '}
+                  <code className="text-[#cdbdff] bg-black/30 px-1 py-0.5 rounded font-mono text-[11px]">
+                    FacelessShorts-debug-apk
+                  </code>{' '}
+                  zip file to install on your phone!
+                </li>
+              </ol>
+            </div>
+
+            {/* Local Build Command */}
+            <div className="flex flex-col gap-2 rounded-2xl bg-[#141218] p-4 border border-white/5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-[#948ea1]">
+                  Local Terminal Build Command (Android Studio / Gradle):
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText('cd android && ./gradlew assembleDebug');
+                    setCopiedBuildCmd(true);
+                    setTimeout(() => setCopiedBuildCmd(false), 2000);
+                  }}
+                  className="text-xs text-[#cdbdff] hover:text-white flex items-center gap-1 font-semibold cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[14px]">
+                    {copiedBuildCmd ? 'check' : 'content_copy'}
+                  </span>
+                  <span>{copiedBuildCmd ? 'Copied!' : 'Copy'}</span>
+                </button>
+              </div>
+              <pre className="text-xs font-mono text-[#10b981] bg-black/40 p-2.5 rounded-xl overflow-x-auto">
+                cd android && ./gradlew assembleDebug
+              </pre>
+              <span className="text-[11px] text-[#948ea1]">
+                Generated APK: <code className="text-[#cac3d8]">android/app/build/outputs/apk/debug/app-debug.apk</code>
+              </span>
+            </div>
+
+            {/* Android Architecture Highlights */}
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="rounded-xl bg-[#26242a] p-3 border border-white/5 flex flex-col gap-1">
+                <span className="text-white font-semibold flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-[16px] text-[#cdbdff]">schedule</span>
+                  WorkManager
+                </span>
+                <span className="text-[11px] text-[#948ea1]">
+                  24-Hour autonomous background short video generation while phone is idle
+                </span>
+              </div>
+              <div className="rounded-xl bg-[#26242a] p-3 border border-white/5 flex flex-col gap-1">
+                <span className="text-white font-semibold flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-[16px] text-[#cdbdff]">movie</span>
+                  FFmpegKit
+                </span>
+                <span className="text-[11px] text-[#948ea1]">
+                  Local 100% free 9:16 vertical video rendering & subtitle burning on-device
+                </span>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowAndroidModal(false)}
+                className="px-5 py-2 rounded-xl bg-[#7c4dff] hover:bg-[#6c3df0] text-white text-xs font-bold cursor-pointer transition-all"
+              >
+                Got It
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -271,6 +271,126 @@ app.post("/api/pipeline/generate-scene-image", async (req, res) => {
   }
 });
 
+// Search or retrieve real 9:16 vertical motion video footage
+app.post("/api/pipeline/search-videos", async (req, res) => {
+  const { query = "dark cinematic ocean", pexelsApiKey } = req.body || {};
+  const apiKey = pexelsApiKey || process.env.PEXELS_API_KEY;
+
+  if (apiKey && apiKey.trim().length > 10) {
+    try {
+      const pexelsRes = await fetch(
+        `https://api.pexels.com/videos/search?query=${encodeURIComponent(
+          query
+        )}&orientation=portrait&per_page=6`,
+        {
+          headers: { Authorization: apiKey },
+        }
+      );
+      if (pexelsRes.ok) {
+        const pexelsData = await pexelsRes.json();
+        if (pexelsData.videos && pexelsData.videos.length > 0) {
+          const videos = pexelsData.videos.map((v: any) => {
+            const hdFile =
+              v.video_files.find(
+                (f: any) =>
+                  f.quality === "hd" && f.width && f.height && f.height > f.width
+              ) ||
+              v.video_files.find((f: any) => f.height && f.height > f.width) ||
+              v.video_files[0];
+            return {
+              id: `pexels-${v.id}`,
+              title: query,
+              thumbnailUrl: v.image,
+              videoUrl: hdFile ? hdFile.link : "",
+              durationSec: v.duration || 15,
+            };
+          });
+          return res.json({ videos });
+        }
+      }
+    } catch {
+      // Fallback below
+    }
+  }
+
+  const CATALOG = [
+    {
+      id: "vid-ocean-waves",
+      title: "Ocean Coastal Drone Waves",
+      videoUrl:
+        "https://upload.wikimedia.org/wikipedia/commons/c/c6/Aerial_view_of_sand_beach._Top_view_sea_waves._Drone_footage.webm",
+      thumbnailUrl:
+        "https://lh3.googleusercontent.com/aida-public/AB6AXuAP4VmTRFUyL4B02ibTon7DXhnrKALR3nP_LB0GVuRxlLGaOi9V1Qdu9oZk_wfWCILwNHi7TXpk7_KkiqggY4WjQu_HXqZ1SwmPsO0-xvRa1kZw1-SOdw12Cj_3Z6v6Vn98uqVPtHoTmk91pYl3arHIh4-0VJ8uzE8Leitr9scexn_tSViET0Q7ONrXlFrzNXIgVqrENsMNeEdyIjraP9jvkXg-4bTYobe7o_RrCguVUhyOZSmGqdDG",
+      durationSec: 16,
+    },
+    {
+      id: "vid-night-timelapse",
+      title: "Glowing Earth & City Lights",
+      videoUrl:
+        "https://upload.wikimedia.org/wikipedia/commons/e/ed/Alexander_Gerst%E2%80%99s_Earth_timelapses_%282017_reissue%29.webm",
+      thumbnailUrl:
+        "https://lh3.googleusercontent.com/aida-public/AB6AXuCP46S9VmnZlYQoLLJ2Wy7gxtLRISTRWG_SEc2wU1ydX76fzAUjjMCsU35eAkd4lLH6yoQFo7uTLdrgeCIfc_8n9rjodB1ucYB94sfawsLzBxoRUBXBOYUh4W0dKRDkvDabOUGnzEKHnrhYdebhwpM7tuIUcXjr571zOHn2DNWfHjNE8Qb77bDa38eIAVKcmEiYAL1R3Yfas_QO9mI9DAEi62yirupeeSzpIZWz1xRuDBdqp7Saho7o",
+      durationSec: 16,
+    },
+    {
+      id: "vid-fire-channel",
+      title: "Slow-Mo Combustion Flame",
+      videoUrl:
+        "https://upload.wikimedia.org/wikipedia/commons/c/c2/Slow-motion_video_of_flame_front_extending_along_a_channel.webm",
+      thumbnailUrl:
+        "https://lh3.googleusercontent.com/aida-public/AB6AXuC8xT35mUKIr0va0He0MbdvOXcOfRKQ9BcnT0mxzmoSLk_JXGkUaWQSA62qmFXidbSUPVNJpy7ulSp1Q7EOmwxOPDYv5O1d5nyihMZzTp1Adum6OjEtwLnobwo4i_knH_eO8XARotdoOrcQjtQysw13XeVMnt_gmZoq5GmAsPmvihkZSfRSFYgUc8g_CbYi04zEE9UZ4NWpwIXVfIE8ZsBxXWLC4qA0qOr9TzzO8Y-hVpk61rk5p5Jw",
+      durationSec: 16,
+    },
+    {
+      id: "vid-fractal-zoom",
+      title: "Hypnotic Infinite Fractal Zoom",
+      videoUrl:
+        "https://upload.wikimedia.org/wikipedia/commons/2/20/%284K_UHD_60FPS%29_Mandelbar_zoom_%27Mandelbarver%C3%A4stelungsagglomeration%27_with_music.webm",
+      thumbnailUrl:
+        "https://lh3.googleusercontent.com/aida-public/AB6AXuDmfgCbDGkYzhxybTyyiK4s2q0YJpSE8zX8cUmT67BCqXd76YwsRBwJpzcEQrBkKw-agZfdDkpdkOHKCJUqfPnjzChKBWW7e37WAcq9sBzRTjnCKciwgI0udMi2lUyvEzygvPyBl_5GNG9SPh9tDQF3JzdnlSeiii2T7-T482dgLT0hsGOLTCSiTLGqFMc-2kO4TTfZ6eA8pTDR2gDKp___QpOpplGrkv7k3_XCmz7cnWR7Rb7Mehyx",
+      durationSec: 16,
+    },
+    {
+      id: "vid-black-hole",
+      title: "Deep Space Black Hole Orbit",
+      videoUrl:
+        "https://upload.wikimedia.org/wikipedia/commons/4/48/Animation_of_Black_Hole_in_Elliptical_Galaxy_%282006-bhcen%29.webm",
+      thumbnailUrl:
+        "https://lh3.googleusercontent.com/aida-public/AB6AXuBryVTOOKbK_Wy9GLaAmfOiqttGDgiSJ1Bqf4aA9iUbMNSlhBBiUz7l49-LuW4W0Y9q5mVNbJ03EDa1jfVvkjlADbet9-sRM_-e0Ge7DZRGjcGho8HhFy-tYAj5jY4kCk1dFg6HpQqvhQAKgw6DjjbiGBUyOZThOjR8gk9K5u49fhdMQpvcF5Vyude1R2m0NRdBXqq_-gY8vVUqNaCty-XLOtx3UrTLn9fbDUfISz4T7gy3KYmxYQnF",
+      durationSec: 16,
+    },
+    {
+      id: "vid-cascade-water",
+      title: "Misty Canyon Waterfall Stream",
+      videoUrl:
+        "https://upload.wikimedia.org/wikipedia/commons/9/94/Cascade_de_Syratu.webm",
+      thumbnailUrl:
+        "https://lh3.googleusercontent.com/aida-public/AB6AXuDvoU5v9lNTPrtOP98NRMSF1HsAhhCcl-rz8EGDYksj2w87QS2jMpiNvGEuVnogP0p029wr86g0MVxukpeWxj6UZpe3EAvDsnxnio3KTfgtXHfXXg1wmJLA5llTleygPs_zXGkm_FE3yTvHUG8xLnHXkymwvWDVNYVTrph6YPADsfCvOUgq3NTnfAzyT3gPHS29ukILRqfzqTX0b64X54484R2-UnM8f-Ry1NMvpKdnA2QZ7gJWhRpd",
+      durationSec: 16,
+    },
+    {
+      id: "vid-rain-storm",
+      title: "Heavy Rain Storm Streets",
+      videoUrl:
+        "https://upload.wikimedia.org/wikipedia/commons/8/82/Heavy_rain_in_Boulevard_Rosemont%2C_Montreal.webm",
+      thumbnailUrl:
+        "https://lh3.googleusercontent.com/aida-public/AB6AXuDSFT6_ncM6gmHCQoDRVemvRG5RyqxusrUpxx_x90yg1-6ed6CuYrRKGtMAO6nRtVrz9IWxs7pCK9q-hnrA8sfkA6mbOxJDSvhtyvCDmk3w2Nmb-iieJmJumDJtLPTxbqs5QwI2YI-M71svOait-Fr35xQ1SF8j00ukX2-Oylo6xndxVV9LikX76VXJr7hCxv5mYbQiRK_Q68OSItJ_ChHR7NE9yPSLw24Fa1Q3Lyo9VLnAI37dPLW0",
+      durationSec: 16,
+    },
+    {
+      id: "vid-fluid-sim",
+      title: "Swirling Kinetic Fluid Loop",
+      videoUrl:
+        "https://upload.wikimedia.org/wikipedia/commons/7/77/2026_Fluid_Simulation.webm",
+      thumbnailUrl:
+        "https://lh3.googleusercontent.com/aida-public/AB6AXuDmfgCbDGkYzhxybTyyiK4s2q0YJpSE8zX8cUmT67BCqXd76YwsRBwJpzcEQrBkKw-agZfdDkpdkOHKCJUqfPnjzChKBWW7e37WAcq9sBzRTjnCKciwgI0udMi2lUyvEzygvPyBl_5GNG9SPh9tDQF3JzdnlSeiii2T7-T482dgLT0hsGOLTCSiTLGqFMc-2kO4TTfZ6eA8pTDR2gDKp___QpOpplGrkv7k3_XCmz7cnWR7Rb7Mehyx",
+      durationSec: 16,
+    },
+  ];
+
+  return res.json({ videos: CATALOG });
+});
+
 // Generate 5 high-retention 3-second viral hooks for FacelessReels Creator Tools
 app.post("/api/tools/generate-viral-hooks", async (req, res) => {
   const { topic = "Stoic Morning Routine", templateName = "Mindset Loop" } = req.body || {};

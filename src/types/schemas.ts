@@ -73,36 +73,39 @@ export const INITIAL_STOCK_CLIPS: BRollClipItem[] = [
   {
     id: 'clip-1',
     index: 1,
-    title: 'Roman Statue',
-    keyword: 'roman statue dark lighting',
+    title: 'Ocean Coastal Waves',
+    keyword: 'aerial ocean waves rolling dark',
     timeRange: '0:00 - 0:16',
     thumbnailUrl:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuC8xT35mUKIr0va0He0MbdvOXcOfRKQ9BcnT0mxzmoSLk_JXGkUaWQSA62qmFXidbSUPVNJpy7ulSp1Q7EOmwxOPDYv5O1d5nyihMZzTp1Adum6OjEtwLnobwo4i_knH_eO8XARotdoOrcQjtQysw13XeVMnt_gmZoq5GmAsPmvihkZSfRSFYgUc8g_CbYi04zEE9UZ4NWpwIXVfIE8ZsBxXWLC4qA0qOr9TzzO8Y-hVpk61rk5p5Jw',
-    videoUrl: '',
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuAP4VmTRFUyL4B02ibTon7DXhnrKALR3nP_LB0GVuRxlLGaOi9V1Qdu9oZk_wfWCILwNHi7TXpk7_KkiqggY4WjQu_HXqZ1SwmPsO0-xvRa1kZw1-SOdw12Cj_3Z6v6Vn98uqVPtHoTmk91pYl3arHIh4-0VJ8uzE8Leitr9scexn_tSViET0Q7ONrXlFrzNXIgVqrENsMNeEdyIjraP9jvkXg-4bTYobe7o_RrCguVUhyOZSmGqdDG',
+    videoUrl:
+      'https://upload.wikimedia.org/wikipedia/commons/c/c6/Aerial_view_of_sand_beach._Top_view_sea_waves._Drone_footage.webm',
     durationSec: 16,
     accentColor: 'primary',
   },
   {
     id: 'clip-2',
     index: 2,
-    title: 'Foggy Sunrise',
-    keyword: 'foggy mountain sunrise',
+    title: 'Night Skyline Timelapse',
+    keyword: 'night city earth lights timelapse',
     timeRange: '0:16 - 0:32',
     thumbnailUrl:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuDvoU5v9lNTPrtOP98NRMSF1HsAhhCcl-rz8EGDYksj2w87QS2jMpiNvGEuVnogP0p029wr86g0MVxukpeWxj6UZpe3EAvDsnxnio3KTfgtXHfXXg1wmJLA5llTleygPs_zXGkm_FE3yTvHUG8xLnHXkymwvWDVNYVTrph6YPADsfCvOUgq3NTnfAzyT3gPHS29ukILRqfzqTX0b64X54484R2-UnM8f-Ry1NMvpKdnA2QZ7gJWhRpd',
-    videoUrl: '',
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuCP46S9VmnZlYQoLLJ2Wy7gxtLRISTRWG_SEc2wU1ydX76fzAUjjMCsU35eAkd4lLH6yoQFo7uTLdrgeCIfc_8n9rjodB1ucYB94sfawsLzBxoRUBXBOYUh4W0dKRDkvDabOUGnzEKHnrhYdebhwpM7tuIUcXjr571zOHn2DNWfHjNE8Qb77bDa38eIAVKcmEiYAL1R3Yfas_QO9mI9DAEi62yirupeeSzpIZWz1xRuDBdqp7Saho7o',
+    videoUrl:
+      'https://upload.wikimedia.org/wikipedia/commons/e/ed/Alexander_Gerst%E2%80%99s_Earth_timelapses_%282017_reissue%29.webm',
     durationSec: 16,
     accentColor: 'tertiary',
   },
   {
     id: 'clip-3',
     index: 3,
-    title: 'Deep Focus',
-    keyword: 'writing leather journal',
+    title: 'Fiery Combustion Front',
+    keyword: 'flame fire slow motion channel',
     timeRange: '0:32 - 0:48',
     thumbnailUrl:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuDSFT6_ncM6gmHCQoDRVemvRG5RyqxusrUpxx_x90yg1-6ed6CuYrRKGtMAO6nRtVrz9IWxs7pCK9q-hnrA8sfkA6mbOxJDSvhtyvCDmk3w2Nmb-iieJmJumDJtLPTxbqs5QwI2YI-M71svOait-Fr35xQ1SF8j00ukX2-Oylo6xndxVV9LikX76VXJr7hCxv5mYbQiRK_Q68OSItJ_ChHR7NE9yPSLw24Fa1Q3Lyo9VLnAI37dPLW0',
-    videoUrl: '',
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuC8xT35mUKIr0va0He0MbdvOXcOfRKQ9BcnT0mxzmoSLk_JXGkUaWQSA62qmFXidbSUPVNJpy7ulSp1Q7EOmwxOPDYv5O1d5nyihMZzTp1Adum6OjEtwLnobwo4i_knH_eO8XARotdoOrcQjtQysw13XeVMnt_gmZoq5GmAsPmvihkZSfRSFYgUc8g_CbYi04zEE9UZ4NWpwIXVfIE8ZsBxXWLC4qA0qOr9TzzO8Y-hVpk61rk5p5Jw',
+    videoUrl:
+      'https://upload.wikimedia.org/wikipedia/commons/c/c2/Slow-motion_video_of_flame_front_extending_along_a_channel.webm',
     durationSec: 16,
     accentColor: 'secondary',
   },
@@ -110,36 +113,132 @@ export const INITIAL_STOCK_CLIPS: BRollClipItem[] = [
 
 export const ALTERNATE_BROLL_POOL: Omit<BRollClipItem, 'id' | 'index' | 'timeRange' | 'accentColor'>[] = [
   {
-    title: 'Marcus Bust',
-    keyword: 'ancient stoic marble bust',
-    thumbnailUrl:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuAP4VmTRFUyL4B02ibTon7DXhnrKALR3nP_LB0GVuRxlLGaOi9V1Qdu9oZk_wfWCILwNHi7TXpk7_KkiqggY4WjQu_HXqZ1SwmPsO0-xvRa1kZw1-SOdw12Cj_3Z6v6Vn98uqVPtHoTmk91pYl3arHIh4-0VJ8uzE8Leitr9scexn_tSViET0Q7ONrXlFrzNXIgVqrENsMNeEdyIjraP9jvkXg-4bTYobe7o_RrCguVUhyOZSmGqdDG',
-    videoUrl: '',
-    durationSec: 16,
-  },
-  {
-    title: 'Neon Stoic',
-    keyword: 'classical sculpture dark studio',
+    title: 'Infinite Fractal Zoom',
+    keyword: 'hypnotic mandelbrot infinite zoom',
     thumbnailUrl:
       'https://lh3.googleusercontent.com/aida-public/AB6AXuDmfgCbDGkYzhxybTyyiK4s2q0YJpSE8zX8cUmT67BCqXd76YwsRBwJpzcEQrBkKw-agZfdDkpdkOHKCJUqfPnjzChKBWW7e37WAcq9sBzRTjnCKciwgI0udMi2lUyvEzygvPyBl_5GNG9SPh9tDQF3JzdnlSeiii2T7-T482dgLT0hsGOLTCSiTLGqFMc-2kO4TTfZ6eA8pTDR2gDKp___QpOpplGrkv7k3_XCmz7cnWR7Rb7Mehyx',
-    videoUrl: '',
+    videoUrl:
+      'https://upload.wikimedia.org/wikipedia/commons/2/20/%284K_UHD_60FPS%29_Mandelbar_zoom_%27Mandelbarver%C3%A4stelungsagglomeration%27_with_music.webm',
     durationSec: 16,
   },
   {
-    title: 'Cosmic Horizon',
-    keyword: 'deep space black hole stars',
+    title: 'Black Hole Orbit',
+    keyword: 'deep space black hole galaxy',
     thumbnailUrl:
       'https://lh3.googleusercontent.com/aida-public/AB6AXuBryVTOOKbK_Wy9GLaAmfOiqttGDgiSJ1Bqf4aA9iUbMNSlhBBiUz7l49-LuW4W0Y9q5mVNbJ03EDa1jfVvkjlADbet9-sRM_-e0Ge7DZRGjcGho8HhFy-tYAj5jY4kCk1dFg6HpQqvhQAKgw6DjjbiGBUyOZThOjR8gk9K5u49fhdMQpvcF5Vyude1R2m0NRdBXqq_-gY8vVUqNaCty-XLOtx3UrTLn9fbDUfISz4T7gy3KYmxYQnF',
-    videoUrl: '',
+    videoUrl:
+      'https://upload.wikimedia.org/wikipedia/commons/4/48/Animation_of_Black_Hole_in_Elliptical_Galaxy_%282006-bhcen%29.webm',
     durationSec: 16,
   },
   {
-    title: 'Midnight Skyline',
-    keyword: 'midnight city skyline focus',
+    title: 'Misty Canyon Waterfall',
+    keyword: 'cascade waterfall forest stream',
+    thumbnailUrl:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuDvoU5v9lNTPrtOP98NRMSF1HsAhhCcl-rz8EGDYksj2w87QS2jMpiNvGEuVnogP0p029wr86g0MVxukpeWxj6UZpe3EAvDsnxnio3KTfgtXHfXXg1wmJLA5llTleygPs_zXGkm_FE3yTvHUG8xLnHXkymwvWDVNYVTrph6YPADsfCvOUgq3NTnfAzyT3gPHS29ukILRqfzqTX0b64X54484R2-UnM8f-Ry1NMvpKdnA2QZ7gJWhRpd',
+    videoUrl:
+      'https://upload.wikimedia.org/wikipedia/commons/9/94/Cascade_de_Syratu.webm',
+    durationSec: 16,
+  },
+  {
+    title: 'Heavy Rain Storm',
+    keyword: 'heavy rain storm city street',
+    thumbnailUrl:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuDSFT6_ncM6gmHCQoDRVemvRG5RyqxusrUpxx_x90yg1-6ed6CuYrRKGtMAO6nRtVrz9IWxs7pCK9q-hnrA8sfkA6mbOxJDSvhtyvCDmk3w2Nmb-iieJmJumDJtLPTxbqs5QwI2YI-M71svOait-Fr35xQ1SF8j00ukX2-Oylo6xndxVV9LikX76VXJr7hCxv5mYbQiRK_Q68OSItJ_ChHR7NE9yPSLw24Fa1Q3Lyo9VLnAI37dPLW0',
+    videoUrl:
+      'https://upload.wikimedia.org/wikipedia/commons/8/82/Heavy_rain_in_Boulevard_Rosemont%2C_Montreal.webm',
+    durationSec: 16,
+  },
+  {
+    title: 'Satisfying Fluid Motion',
+    keyword: 'fluid simulation swirling loop',
+    thumbnailUrl:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuDmfgCbDGkYzhxybTyyiK4s2q0YJpSE8zX8cUmT67BCqXd76YwsRBwJpzcEQrBkKw-agZfdDkpdkOHKCJUqfPnjzChKBWW7e37WAcq9sBzRTjnCKciwgI0udMi2lUyvEzygvPyBl_5GNG9SPh9tDQF3JzdnlSeiii2T7-T482dgLT0hsGOLTCSiTLGqFMc-2kO4TTfZ6eA8pTDR2gDKp___QpOpplGrkv7k3_XCmz7cnWR7Rb7Mehyx',
+    videoUrl:
+      'https://upload.wikimedia.org/wikipedia/commons/7/77/2026_Fluid_Simulation.webm',
+    durationSec: 16,
+  },
+];
+
+export interface MotionVideoPreset {
+  id: string;
+  title: string;
+  category: 'Cinematic' | 'Satisfying' | 'Nature' | 'Sci-Fi' | 'Elements';
+  videoUrl: string;
+  thumbnailUrl: string;
+}
+
+export const VIRAL_MOTION_VIDEOS: MotionVideoPreset[] = [
+  {
+    id: 'vid-ocean-waves',
+    title: 'Ocean Coastal Drone Waves',
+    category: 'Nature',
+    videoUrl:
+      'https://upload.wikimedia.org/wikipedia/commons/c/c6/Aerial_view_of_sand_beach._Top_view_sea_waves._Drone_footage.webm',
+    thumbnailUrl:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuAP4VmTRFUyL4B02ibTon7DXhnrKALR3nP_LB0GVuRxlLGaOi9V1Qdu9oZk_wfWCILwNHi7TXpk7_KkiqggY4WjQu_HXqZ1SwmPsO0-xvRa1kZw1-SOdw12Cj_3Z6v6Vn98uqVPtHoTmk91pYl3arHIh4-0VJ8uzE8Leitr9scexn_tSViET0Q7ONrXlFrzNXIgVqrENsMNeEdyIjraP9jvkXg-4bTYobe7o_RrCguVUhyOZSmGqdDG',
+  },
+  {
+    id: 'vid-night-timelapse',
+    title: 'Glowing Earth & City Lights',
+    category: 'Cinematic',
+    videoUrl:
+      'https://upload.wikimedia.org/wikipedia/commons/e/ed/Alexander_Gerst%E2%80%99s_Earth_timelapses_%282017_reissue%29.webm',
     thumbnailUrl:
       'https://lh3.googleusercontent.com/aida-public/AB6AXuCP46S9VmnZlYQoLLJ2Wy7gxtLRISTRWG_SEc2wU1ydX76fzAUjjMCsU35eAkd4lLH6yoQFo7uTLdrgeCIfc_8n9rjodB1ucYB94sfawsLzBxoRUBXBOYUh4W0dKRDkvDabOUGnzEKHnrhYdebhwpM7tuIUcXjr571zOHn2DNWfHjNE8Qb77bDa38eIAVKcmEiYAL1R3Yfas_QO9mI9DAEi62yirupeeSzpIZWz1xRuDBdqp7Saho7o',
-    videoUrl: '',
-    durationSec: 16,
+  },
+  {
+    id: 'vid-fire-channel',
+    title: 'Slow-Mo Combustion Flame',
+    category: 'Elements',
+    videoUrl:
+      'https://upload.wikimedia.org/wikipedia/commons/c/c2/Slow-motion_video_of_flame_front_extending_along_a_channel.webm',
+    thumbnailUrl:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuC8xT35mUKIr0va0He0MbdvOXcOfRKQ9BcnT0mxzmoSLk_JXGkUaWQSA62qmFXidbSUPVNJpy7ulSp1Q7EOmwxOPDYv5O1d5nyihMZzTp1Adum6OjEtwLnobwo4i_knH_eO8XARotdoOrcQjtQysw13XeVMnt_gmZoq5GmAsPmvihkZSfRSFYgUc8g_CbYi04zEE9UZ4NWpwIXVfIE8ZsBxXWLC4qA0qOr9TzzO8Y-hVpk61rk5p5Jw',
+  },
+  {
+    id: 'vid-fractal-zoom',
+    title: 'Hypnotic Infinite Fractal Zoom',
+    category: 'Satisfying',
+    videoUrl:
+      'https://upload.wikimedia.org/wikipedia/commons/2/20/%284K_UHD_60FPS%29_Mandelbar_zoom_%27Mandelbarver%C3%A4stelungsagglomeration%27_with_music.webm',
+    thumbnailUrl:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuDmfgCbDGkYzhxybTyyiK4s2q0YJpSE8zX8cUmT67BCqXd76YwsRBwJpzcEQrBkKw-agZfdDkpdkOHKCJUqfPnjzChKBWW7e37WAcq9sBzRTjnCKciwgI0udMi2lUyvEzygvPyBl_5GNG9SPh9tDQF3JzdnlSeiii2T7-T482dgLT0hsGOLTCSiTLGqFMc-2kO4TTfZ6eA8pTDR2gDKp___QpOpplGrkv7k3_XCmz7cnWR7Rb7Mehyx',
+  },
+  {
+    id: 'vid-black-hole',
+    title: 'Deep Space Black Hole Orbit',
+    category: 'Sci-Fi',
+    videoUrl:
+      'https://upload.wikimedia.org/wikipedia/commons/4/48/Animation_of_Black_Hole_in_Elliptical_Galaxy_%282006-bhcen%29.webm',
+    thumbnailUrl:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuBryVTOOKbK_Wy9GLaAmfOiqttGDgiSJ1Bqf4aA9iUbMNSlhBBiUz7l49-LuW4W0Y9q5mVNbJ03EDa1jfVvkjlADbet9-sRM_-e0Ge7DZRGjcGho8HhFy-tYAj5jY4kCk1dFg6HpQqvhQAKgw6DjjbiGBUyOZThOjR8gk9K5u49fhdMQpvcF5Vyude1R2m0NRdBXqq_-gY8vVUqNaCty-XLOtx3UrTLn9fbDUfISz4T7gy3KYmxYQnF',
+  },
+  {
+    id: 'vid-cascade-water',
+    title: 'Misty Canyon Waterfall Stream',
+    category: 'Nature',
+    videoUrl:
+      'https://upload.wikimedia.org/wikipedia/commons/9/94/Cascade_de_Syratu.webm',
+    thumbnailUrl:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuDvoU5v9lNTPrtOP98NRMSF1HsAhhCcl-rz8EGDYksj2w87QS2jMpiNvGEuVnogP0p029wr86g0MVxukpeWxj6UZpe3EAvDsnxnio3KTfgtXHfXXg1wmJLA5llTleygPs_zXGkm_FE3yTvHUG8xLnHXkymwvWDVNYVTrph6YPADsfCvOUgq3NTnfAzyT3gPHS29ukILRqfzqTX0b64X54484R2-UnM8f-Ry1NMvpKdnA2QZ7gJWhRpd',
+  },
+  {
+    id: 'vid-rain-storm',
+    title: 'Heavy Rain Storm Streets',
+    category: 'Cinematic',
+    videoUrl:
+      'https://upload.wikimedia.org/wikipedia/commons/8/82/Heavy_rain_in_Boulevard_Rosemont%2C_Montreal.webm',
+    thumbnailUrl:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuDSFT6_ncM6gmHCQoDRVemvRG5RyqxusrUpxx_x90yg1-6ed6CuYrRKGtMAO6nRtVrz9IWxs7pCK9q-hnrA8sfkA6mbOxJDSvhtyvCDmk3w2Nmb-iieJmJumDJtLPTxbqs5QwI2YI-M71svOait-Fr35xQ1SF8j00ukX2-Oylo6xndxVV9LikX76VXJr7hCxv5mYbQiRK_Q68OSItJ_ChHR7NE9yPSLw24Fa1Q3Lyo9VLnAI37dPLW0',
+  },
+  {
+    id: 'vid-fluid-sim',
+    title: 'Swirling Kinetic Fluid Loop',
+    category: 'Satisfying',
+    videoUrl:
+      'https://upload.wikimedia.org/wikipedia/commons/7/77/2026_Fluid_Simulation.webm',
+    thumbnailUrl:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuDmfgCbDGkYzhxybTyyiK4s2q0YJpSE8zX8cUmT67BCqXd76YwsRBwJpzcEQrBkKw-agZfdDkpdkOHKCJUqfPnjzChKBWW7e37WAcq9sBzRTjnCKciwgI0udMi2lUyvEzygvPyBl_5GNG9SPh9tDQF3JzdnlSeiii2T7-T482dgLT0hsGOLTCSiTLGqFMc-2kO4TTfZ6eA8pTDR2gDKp___QpOpplGrkv7k3_XCmz7cnWR7Rb7Mehyx',
   },
 ];
 
