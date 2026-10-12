@@ -94,8 +94,10 @@ export const MediaPreviewScreen: React.FC<MediaPreviewScreenProps> = ({
                   autoPlay
                   loop
                   muted
-                  playsInline
-                  crossOrigin="anonymous"
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    target.style.display = 'none';
+                  }}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
               ) : (

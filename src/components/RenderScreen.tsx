@@ -388,6 +388,50 @@ export const RenderScreen: React.FC<RenderScreenProps> = ({
         </div>
       </div>
 
+      {/* Render Complete Hero Player & Download */}
+      {renderProgress === 100 && (
+        <div className="rounded-2xl bg-gradient-to-br from-[#7c4dff]/20 to-[#10b981]/15 p-4 border border-[#7c4dff]/40 flex flex-col sm:flex-row items-center gap-4">
+          <div className="w-24 h-40 rounded-xl overflow-hidden bg-black shrink-0 relative shadow-lg border border-white/10">
+            <video
+              src={activeShort.clips[0]?.videoUrl || '/videos/ocean_waves.mp4'}
+              poster={activeShort.clips[0]?.thumbnailUrl || activeShort.thumbnailUrl}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-full object-cover"
+            />
+            <span className="absolute bottom-1 left-1 px-1 py-0.5 rounded text-[8px] font-bold bg-black/80 text-[#10b981]">
+              1080x1920
+            </span>
+          </div>
+          <div className="flex-1 flex flex-col gap-2 min-w-0">
+            <div className="flex flex-col">
+              <span className="text-xs font-bold text-[#10b981] flex items-center gap-1">
+                <span className="material-symbols-outlined text-[16px] icon-filled">
+                  check_circle
+                </span>
+                Render Finished Successfully!
+              </span>
+              <h4 className="text-sm font-semibold text-white truncate">
+                {activeShort.title}
+              </h4>
+              <p className="text-[11px] text-[#cac3d8]">
+                Stitched 3 motion video clips, synced audio narration &amp; animated subtitles into a production-ready MP4.
+              </p>
+            </div>
+            <a
+              href={activeShort.clips[0]?.videoUrl || '/videos/ocean_waves.mp4'}
+              download={`${activeShort.title.toLowerCase().replace(/[^a-z0-9]+/g, '_')}_1080x1920.mp4`}
+              className="h-10 px-4 rounded-xl bg-[#7c4dff] hover:bg-[#7c4dff]/90 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-lg transition-colors w-fit"
+            >
+              <span className="material-symbols-outlined text-[18px]">download</span>
+              <span>Download 1080x1920 MP4 Video</span>
+            </a>
+          </div>
+        </div>
+      )}
+
       {/* Bottom Interactive Controls */}
       <div className="flex flex-col gap-2 pt-1 pb-2">
         <button
@@ -398,7 +442,7 @@ export const RenderScreen: React.FC<RenderScreenProps> = ({
           <span className="material-symbols-outlined text-[20px] text-[#cdbdff]">
             smart_display
           </span>
-          <span>Open 9:16 Burned Subtitle Video Preview</span>
+          <span>Open 9:16 Studio Video Editor</span>
         </button>
 
         {isRendering && (

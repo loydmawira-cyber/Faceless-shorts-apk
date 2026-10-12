@@ -110,8 +110,10 @@ export const ShortPreviewModal: React.FC<ShortPreviewModalProps> = ({ shortItem,
               autoPlay
               loop
               muted
-              playsInline
-              crossOrigin="anonymous"
+              onError={(e) => {
+                const target = e.currentTarget;
+                target.style.display = 'none';
+              }}
               className="w-full h-full object-cover scale-105 transition-all duration-700"
             />
           ) : (

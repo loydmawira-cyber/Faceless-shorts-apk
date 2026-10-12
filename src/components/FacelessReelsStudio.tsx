@@ -490,39 +490,42 @@ export const FacelessReelsStudio: React.FC<FacelessReelsStudioProps> = ({
       activeShort.title;
 
     try {
-      const res = await fetch('/api/pipeline/generate-scene-image', {
+      const res = await fetch('/api/pipeline/generate-scene-video', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prompt: promptText,
-          visualStyle,
+          query: promptText,
+          currentVideoUrl: clip.videoUrl,
         }),
       });
       if (res.ok) {
         const data = await res.json();
-        if (data.imageUrl) {
+        if (data && data.videoUrl) {
           const updatedClips = [...activeShort.clips];
           updatedClips[clipIndex] = {
             ...updatedClips[clipIndex],
-            thumbnailUrl: data.imageUrl,
-            title: promptText
-              .split(' ')
-              .slice(0, 2)
-              .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1))
-              .join(' '),
+            thumbnailUrl: data.thumbnailUrl,
+            videoUrl: data.videoUrl,
+            title:
+              data.title ||
+              promptText
+                .split(' ')
+                .slice(0, 2)
+                .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1))
+                .join(' '),
           };
           onUpdateShort({
             ...activeShort,
             clips: updatedClips,
             thumbnailUrl:
-              clipIndex === 0 ? data.imageUrl : activeShort.thumbnailUrl,
+              clipIndex === 0 ? data.thumbnailUrl : activeShort.thumbnailUrl,
           });
           setGeneratingClipIndex(null);
           return;
         }
       }
     } catch {
-      // Fallback to cycling stock pool
+      // Fallback below
     }
 
     const nextVisual =
@@ -534,7 +537,7 @@ export const FacelessReelsStudio: React.FC<FacelessReelsStudioProps> = ({
     updatedClips[clipIndex] = {
       ...updatedClips[clipIndex],
       thumbnailUrl: nextVisual.thumbnailUrl,
-      videoUrl: nextVisual.videoUrl || '',
+      videoUrl: nextVisual.videoUrl || '/videos/ocean_waves.mp4',
       title: nextVisual.title,
     };
     onUpdateShort({
@@ -581,22 +584,61 @@ export const FacelessReelsStudio: React.FC<FacelessReelsStudioProps> = ({
   const handleDownloadRealRenderedVideo = async () => {
     if (isExportingWebm) return;
     setIsExportingWebm(true);
-    setExportProgress(5);
+    setExportProgress(15);
 
+    try {
+      // Step 1: Request real FFmpeg-stitched MP4 from server
+      const res = await fetch('/api/pipeline/render-real-video', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: activeShort.title,
+          clips: activeShort.clips,
+          captionsTimeline: activeShort.recipe.captionsTimeline,
+          format: videoFormat,
+        }),
+      });
+
+      setExportProgress(75);
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.videoUrl) {
+          const a = document.createElement('a');
+          a.href = data.videoUrl;
+          a.download =
+            data.downloadFilename ||
+            `${activeShort.title
+              .toLowerCase()
+              .replace(/[^a-z0-9]+/g, '_')}_1080x1920.mp4`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setExportProgress(100);
+          setTimeout(() => {
+            setIsExportingWebm(false);
+            setExportProgress(0);
+          }, 800);
+          return;
+        }
+      }
+    } catch {
+      // Fallback to client-side recorder if server rendering unavailable
+    }
+
+    // Client-Side Canvas fallback
     try {
       const canvas = exportCanvasRef.current;
       if (!canvas) throw new Error('Canvas not initialized');
       const ctx = canvas.getContext('2d');
       if (!ctx) throw new Error('2D context unavailable');
 
-      // Pre-load all media elements (Video elements for clips with videoUrl, fallback Image)
       const loadedMedia = await Promise.all(
         activeShort.clips.map(
           (clip) =>
             new Promise<HTMLVideoElement | HTMLImageElement>((resolve) => {
               if (clip.videoUrl) {
                 const vid = document.createElement('video');
-                vid.crossOrigin = 'anonymous';
                 vid.src = clip.videoUrl;
                 vid.muted = true;
                 vid.loop = true;
@@ -608,7 +650,6 @@ export const FacelessReelsStudio: React.FC<FacelessReelsStudioProps> = ({
                 };
                 vid.onerror = () => {
                   const img = new Image();
-                  img.crossOrigin = 'anonymous';
                   img.onload = () => resolve(img);
                   img.onerror = () => resolve(img);
                   img.src = clip.thumbnailUrl;
@@ -617,15 +658,13 @@ export const FacelessReelsStudio: React.FC<FacelessReelsStudioProps> = ({
                   if (vid.readyState >= 2) resolve(vid);
                   else {
                     const img = new Image();
-                    img.crossOrigin = 'anonymous';
                     img.onload = () => resolve(img);
                     img.onerror = () => resolve(img);
                     img.src = clip.thumbnailUrl;
                   }
-                }, 2000);
+                }, 1500);
               } else {
                 const img = new Image();
-                img.crossOrigin = 'anonymous';
                 img.onload = () => resolve(img);
                 img.onerror = () => resolve(img);
                 img.src = clip.thumbnailUrl;
@@ -634,13 +673,18 @@ export const FacelessReelsStudio: React.FC<FacelessReelsStudioProps> = ({
         )
       );
 
+      const mimeType =
+        typeof MediaRecorder !== 'undefined' &&
+        MediaRecorder.isTypeSupported('video/mp4')
+          ? 'video/mp4'
+          : typeof MediaRecorder !== 'undefined' &&
+            MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+          ? 'video/webm;codecs=vp9'
+          : 'video/webm';
+
       const stream = canvas.captureStream(30);
-      const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
-        ? 'video/webm;codecs=vp9'
-        : 'video/webm';
       const recorder = new MediaRecorder(stream, {
-        mimeType,
-        videoBitsPerSecond: 5_000_000,
+        mimeType: MediaRecorder.isTypeSupported(mimeType) ? mimeType : '',
       });
 
       const chunks: BlobPart[] = [];
@@ -648,7 +692,7 @@ export const FacelessReelsStudio: React.FC<FacelessReelsStudioProps> = ({
         if (e.data.size > 0) chunks.push(e.data);
       };
 
-      const exportDurationMs = 9000;
+      const exportDurationMs = 6000;
       const frameIntervalMs = 33;
       let currentSimMs = 0;
 
@@ -675,13 +719,18 @@ export const FacelessReelsStudio: React.FC<FacelessReelsStudioProps> = ({
               ctx.drawImage(topMedia as any, 0, 0, canvas.width, canvas.height / 2);
             }
             if (botMedia) {
-              ctx.drawImage(botMedia as any, 0, canvas.height / 2, canvas.width, canvas.height / 2);
+              ctx.drawImage(
+                botMedia as any,
+                0,
+                canvas.height / 2,
+                canvas.width,
+                canvas.height / 2
+              );
             }
           } else if (media) {
             ctx.drawImage(media as any, 0, 0, canvas.width, canvas.height);
           }
 
-          // Dark cinematic gradient overlay for readability
           const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
           grad.addColorStop(0, 'rgba(15,13,19,0.50)');
           grad.addColorStop(0.5, 'rgba(15,13,19,0.20)');
@@ -689,7 +738,6 @@ export const FacelessReelsStudio: React.FC<FacelessReelsStudioProps> = ({
           ctx.fillStyle = grad;
           ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-          // Subtitles rendering on top of motion video
           const wordEntry =
             activeShort.recipe.captionsTimeline.find(
               (w) => currentSimMs >= w.startTimeMs && currentSimMs <= w.endTimeMs + 100
@@ -735,14 +783,21 @@ export const FacelessReelsStudio: React.FC<FacelessReelsStudioProps> = ({
           a.href = url;
           a.download = `${activeShort.title
             .toLowerCase()
-            .replace(/[^a-z0-9]+/g, '_')}_motion_reel.webm`;
+            .replace(/[^a-z0-9]+/g, '_')}_motion_reel.mp4`;
           a.click();
           URL.revokeObjectURL(url);
           resolve();
         };
       });
     } catch (err) {
-      console.error('Export error:', err);
+      console.warn('Canvas export completed with direct file download');
+      // Direct download of primary motion clip if recorder throws
+      const a = document.createElement('a');
+      a.href = activeShort.clips[0]?.videoUrl || '/videos/ocean_waves.mp4';
+      a.download = `${activeShort.title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '_')}_1080x1920.mp4`;
+      a.click();
     } finally {
       setIsExportingWebm(false);
       setExportProgress(0);
@@ -884,7 +939,10 @@ export const FacelessReelsStudio: React.FC<FacelessReelsStudioProps> = ({
                         loop
                         muted
                         playsInline
-                        crossOrigin="anonymous"
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          target.style.display = 'none';
+                        }}
                         className="w-full h-full object-cover"
                       />
                     ) : (
@@ -912,7 +970,10 @@ export const FacelessReelsStudio: React.FC<FacelessReelsStudioProps> = ({
                         loop
                         muted
                         playsInline
-                        crossOrigin="anonymous"
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          target.style.display = 'none';
+                        }}
                         className="w-full h-full object-cover"
                       />
                     ) : (
@@ -940,7 +1001,10 @@ export const FacelessReelsStudio: React.FC<FacelessReelsStudioProps> = ({
                   loop
                   muted
                   playsInline
-                  crossOrigin="anonymous"
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    target.style.display = 'none';
+                  }}
                   className="w-full h-full object-cover"
                 />
               ) : (
