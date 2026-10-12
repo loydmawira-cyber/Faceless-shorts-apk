@@ -1,0 +1,85 @@
+name: Build Android APK (FacelessShorts AutoPilot)
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  build-android-apk:
+    name: Assemble Debug & Signed Release APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Setup Gradle 8.9 with Caching
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Build Debug APK
+        working-directory: ./android
+        run: gradle assembleDebug --stacktrace
+
+      - name: Upload Installable Debug APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FacelessShorts-AutoPilot-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Generate Ephemeral Keystore & Sign Release APK
+        working-directory: ./android
+        run: |
+          gradle assembleRelease --stacktrace
+          KEYSTORE_FILE="$RUNNER_TEMP/release-signing.jks"
+          keytool -genkeypair -v \
+            -keystore "$KEYSTORE_FILE" \
+            -alias facelessshorts \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -storepass android123 \
+            -keypass android123 \
+            -dname "CN=FacelessShorts AutoPilot, OU=Mobile, O=FacelessShorts, L=London, S=London, C=GB"
+
+          UNSIGNED_APK="app/build/outputs/apk/release/app-release-unsigned.apk"
+          SIGNED_APK="app/build/outputs/apk/release/FacelessShorts-AutoPilot-release-signed.apk"
+
+          if [ -f "$UNSIGNED_APK" ]; then
+            BUILD_TOOLS_DIR=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -n 1)
+            "$BUILD_TOOLS_DIR/zipalign" -v -p 4 "$UNSIGNED_APK" "app/build/outputs/apk/release/app-release-aligned.apk"
+            "$BUILD_TOOLS_DIR/apksigner" sign \
+              --ks "$KEYSTORE_FILE" \
+              --ks-key-alias facelessshorts \
+              --ks-pass pass:android123 \
+              --key-pass pass:android123 \
+              --out "$SIGNED_APK" \
+              "app/build/outputs/apk/release/app-release-aligned.apk"
+          fi
+
+      - name: Upload Signed Release APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FacelessShorts-AutoPilot-release-signed-apk
+          path: android/app/build/outputs/apk/release/FacelessShorts-AutoPilot-release-signed.apk
+          if-no-files-found: warn
+          retention-days: 30

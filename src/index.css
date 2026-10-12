@@ -1,0 +1,97 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --surface: #141218;
+    --surface-dim: #141218;
+    --surface-bright: #3b383f;
+    --surface-container-lowest: #0f0d13;
+    --surface-container-low: #1d1b21;
+    --surface-container: #211f25;
+    --surface-container-high: #2b292f;
+    --surface-container-highest: #36343a;
+    --on-surface: #e7e0e9;
+    --on-surface-variant: #cac3d8;
+    --outline: #948ea1;
+    --outline-variant: #494455;
+    --primary: #cdbdff;
+    --on-primary: #370096;
+    --primary-container: #7c4dff;
+    --on-primary-container: #fcf6ff;
+    --secondary: #ffb59e;
+    --on-secondary: #5e1700;
+    --secondary-container: #7f2a0d;
+    --on-secondary-container: #ff9b7c;
+    --tertiary: #ffb954;
+    --on-tertiary: #452b00;
+    --tertiary-container: #9d6700;
+    --on-tertiary-container: #fff7f2;
+    --error: #ffb4ab;
+    --error-container: #93000a;
+  }
+
+  html,
+  body {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: #141218;
+    color: #e7e0e9;
+    font-family: "Roboto Flex", -apple-system, BlinkMacSystemFont, sans-serif;
+    overscroll-behavior: none;
+  }
+}
+
+.font-mono-code {
+  font-family: "JetBrains Mono", monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.material-symbols-outlined {
+  font-family: "Material Symbols Outlined";
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+.icon-filled {
+  font-variation-settings: "FILL" 1, "wght" 500, "GRAD" 0, "opsz" 24;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #141218;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #36343a;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #494455;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

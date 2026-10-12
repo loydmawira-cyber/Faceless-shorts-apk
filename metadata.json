@@ -1,0 +1,6 @@
+{
+  "name": "FacelessShorts Auto-Pilot",
+  "description": "Autonomous short-form vertical video creation, AI script generation, Pexels B-Roll sequencing, local TTS & FFmpeg rendering, and native Kotlin/Jetpack Compose architecture suite.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
