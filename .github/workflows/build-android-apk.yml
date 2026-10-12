@@ -26,8 +26,8 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Accept Android SDK licenses
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
 
       - name: Setup Gradle 8.9 with Caching
         uses: gradle/actions/setup-gradle@v4
@@ -72,7 +72,7 @@ jobs:
             -validity 10000 \
             -storepass android123 \
             -keypass android123 \
-            -dname "CN=FacelessShorts AutoPilot, OU=Mobile, O=FacelessShorts, L=London, S=London, C=GB"
+            -dname "CN=FacelessShorts AutoPilot, OU=Mobile, O=FacelessShorts, L=London, ST=London, C=GB"
 
           UNSIGNED_APK="app/build/outputs/apk/release/app-release-unsigned.apk"
           SIGNED_APK="app/build/outputs/apk/release/FacelessShorts-AutoPilot-release-signed.apk"
