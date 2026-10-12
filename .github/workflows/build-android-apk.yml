@@ -45,17 +45,8 @@ jobs:
 
       - name: Set up Android SDK & Build Tools 35
         uses: android-actions/setup-android@v3
-
-      - name: Accept Android Licenses & Pre-install Android 35
-        run: |
-          export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/tools/bin
-          yes | sdkmanager --licenses || true
-          for d in "$ANDROID_HOME"/cmdline-tools/*/bin; do
-            if [ -f "$d/sdkmanager" ]; then
-              yes | "$d/sdkmanager" --licenses || true
-            fi
-          done
-          sdkmanager "platforms;android-35" "build-tools;35.0.0" || true
+        with:
+          packages: platform-tools platforms;android-35 build-tools;35.0.0
 
       - name: Configure Gradle Environment
         run: |
