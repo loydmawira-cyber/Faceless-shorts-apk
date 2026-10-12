@@ -48,8 +48,14 @@ jobs:
 
       - name: Accept Android Licenses & Pre-install Android 35
         run: |
-          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null 2>&1 || true
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-35" "build-tools;35.0.0" > /dev/null 2>&1 || true
+          export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/tools/bin
+          yes | sdkmanager --licenses || true
+          for d in "$ANDROID_HOME"/cmdline-tools/*/bin; do
+            if [ -f "$d/sdkmanager" ]; then
+              yes | "$d/sdkmanager" --licenses || true
+            fi
+          done
+          sdkmanager "platforms;android-35" "build-tools;35.0.0" || true
 
       - name: Configure Gradle Environment
         run: |
