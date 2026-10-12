@@ -33,7 +33,7 @@ import java.io.File
  * Media Preview Screen (Jetpack Compose Material You Dark Theme):
  * - Allows the user to look inside the pipeline
  * - View the current parsed JSON script recipe text (`VideoScriptRecipeJSON`)
- * - Preview the downloaded stock video thumbnails extracted from `cacheDir/broll_clips/*.mp4`
+ * - Preview the downloaded stock video thumbnails extracted from `cacheDir/broll_clips` (mp4 files)
  * - Inspect the `CaptionWordJSON` word-by-word subtitle timeline
  */
 @Composable
