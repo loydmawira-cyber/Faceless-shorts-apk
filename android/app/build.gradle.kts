@@ -77,7 +77,7 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.7.0")
 
     // FFmpeg Wrapper Library for local 100% free 9:16 video rendering & subtitle burning
-    implementation("com.arthenica:ffmpeg-kit-full:6.0-2")
+    implementation("com.moizhassan.ffmpeg:ffmpeg-kit-16kb:6.1.1")
 
     // Google API Client Library & YouTube Data API v3 for Automated Shorts Upload
     implementation("com.google.android.gms:play-services-auth:21.2.0")
