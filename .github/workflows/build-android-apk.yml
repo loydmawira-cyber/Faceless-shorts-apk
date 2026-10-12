@@ -34,9 +34,18 @@ jobs:
         with:
           gradle-version: '8.9'
 
+      - name: Make Gradle Wrapper Executable
+        working-directory: ./android
+        run: chmod +x gradlew || true
+
       - name: Build Debug APK
         working-directory: ./android
-        run: gradle assembleDebug --stacktrace
+        run: |
+          if [ -f "./gradlew" ]; then
+            ./gradlew assembleDebug --stacktrace
+          else
+            gradle assembleDebug --stacktrace
+          fi
 
       - name: Upload Installable Debug APK Artifact
         uses: actions/upload-artifact@v4
@@ -49,7 +58,11 @@ jobs:
       - name: Generate Ephemeral Keystore & Sign Release APK
         working-directory: ./android
         run: |
-          gradle assembleRelease --stacktrace
+          if [ -f "./gradlew" ]; then
+            ./gradlew assembleRelease --stacktrace
+          else
+            gradle assembleRelease --stacktrace
+          fi
           KEYSTORE_FILE="$RUNNER_TEMP/release-signing.jks"
           keytool -genkeypair -v \
             -keystore "$KEYSTORE_FILE" \
